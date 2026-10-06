@@ -1,0 +1,1617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Zero Hunger — SDG 2</title>
+
+<style>
+:root {
+    --white: #f4fbff;
+    --muted: #b9d5df;
+    --blue: #168aad;
+    --cyan: #43d9d1;
+    --dark: #06131f;
+    --dark2: #0a2433;
+    --panel: rgba(7, 27, 40, 0.82);
+    --border: rgba(120, 230, 230, 0.22);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--white);
+    background: var(--dark);
+
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+/* =========================
+   STAGE
+   A fixed-size virtual canvas, uniformly
+   scaled to fit any desktop/projector
+   screen — so the layout looks identical
+   everywhere, just bigger or smaller.
+========================= */
+
+.stage-wrapper {
+    position: fixed;
+    inset: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+}
+
+.stage {
+    position: relative;
+    flex-shrink: 0;
+
+    width: 1280px;
+    height: 750px;
+
+    background:
+        radial-gradient(
+            circle at 50% 40%,
+            rgba(19, 139, 157, 0.28),
+            transparent 30%
+        ),
+        linear-gradient(
+            135deg,
+            #04121f 0%,
+            #07364b 48%,
+            #087d80 100%
+        );
+
+    transform-origin: center center;
+
+    overflow: hidden;
+}
+
+/* =========================
+   TOP BAR
+========================= */
+
+.topbar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 78px;
+
+    display: flex;
+    align-items: center;
+    gap: 15px;
+
+    padding: 0 30px;
+
+    background: rgba(3, 15, 25, 0.55);
+    backdrop-filter: blur(14px);
+
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+
+    z-index: 100;
+}
+
+.un-icon {
+    width: 44px;
+    height: 44px;
+
+    border: 2px solid var(--cyan);
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: var(--cyan);
+    font-size: 25px;
+}
+
+.top-title {
+    font-size: 17px;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+.top-subtitle {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1.5px;
+    margin-top: 4px;
+}
+
+/* =========================
+   MAIN MAP
+========================= */
+
+.map-container {
+    position: absolute;
+    top: 78px;
+    left: 0;
+    width: 100%;
+    height: calc(100% - 78px);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+}
+
+.world {
+    position: relative;
+
+    width: 1050px;
+    height: 650px;
+
+    transform-origin: center center;
+
+    transition:
+        transform 0.8s cubic-bezier(.2,.8,.2,1);
+
+    z-index: 2;
+}
+
+.world.zoomed {
+    transform:
+        translate(var(--move-x), var(--move-y))
+        scale(2.35);
+}
+
+/* =========================
+   SVG CONNECTIONS
+========================= */
+
+.connections {
+    position: absolute;
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    pointer-events: none;
+}
+
+.connections line {
+    stroke: rgba(113, 225, 225, 0.35);
+    stroke-width: 2;
+    stroke-dasharray: 7 8;
+}
+
+/* =========================
+   CENTER NODE
+========================= */
+
+.center {
+    position: absolute;
+
+    left: 50%;
+    top: 50%;
+
+    transform: translate(-50%, -50%);
+
+    width: 270px;
+    height: 180px;
+
+    border-radius: 28px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(20, 139, 170, 0.96),
+            rgba(8, 79, 101, 0.96)
+        );
+
+    border: 2px solid rgba(120, 240, 235, 0.65);
+
+    box-shadow:
+        0 20px 60px rgba(0,0,0,0.35),
+        0 0 45px rgba(67,217,209,0.16);
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    text-align: center;
+
+    z-index: 5;
+}
+
+.center .sdg {
+    font-size: 13px;
+    letter-spacing: 3px;
+    color: #b8ffff;
+    margin-bottom: 8px;
+}
+
+.center h1 {
+    font-size: 31px;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
+
+.center p {
+    font-size: 12px;
+    line-height: 1.45;
+    color: #d9f8fa;
+    max-width: 210px;
+}
+
+/* =========================
+   MAP NODES
+========================= */
+
+.node {
+    position: absolute;
+
+    width: 210px;
+    min-height: 92px;
+
+    padding: 18px 20px;
+
+    border-radius: 20px;
+
+    background: rgba(6, 29, 43, 0.9);
+
+    border: 1px solid rgba(113, 225, 225, 0.25);
+
+    box-shadow:
+        0 15px 35px rgba(0,0,0,0.28);
+
+    cursor: pointer;
+
+    transition:
+        transform 0.25s ease,
+        border-color 0.25s ease,
+        background 0.25s ease,
+        box-shadow 0.25s ease;
+
+    z-index: 6;
+}
+
+.node:hover {
+    transform: translateY(-6px) scale(1.035);
+
+    border-color: rgba(67,217,209,0.8);
+
+    background: rgba(8, 46, 62, 0.96);
+
+    box-shadow:
+        0 20px 45px rgba(0,0,0,0.35),
+        0 0 25px rgba(67,217,209,0.12);
+}
+
+.node-number {
+    color: var(--cyan);
+    font-size: 11px;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+}
+
+.node-title {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.node-description {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 6px;
+}
+
+/* Node positions */
+
+.node.what {
+    left: 60px;
+    top: 100px;
+}
+
+.node.problem {
+    right: 60px;
+    top: 100px;
+}
+
+.node.causes {
+    left: 10px;
+    top: 280px;
+}
+
+.node.tips {
+    left: 180px;
+    bottom: 55px;
+}
+
+.node.future {
+    right: 180px;
+    bottom: 55px;
+}
+
+/* =========================
+   DETAIL OVERLAY
+========================= */
+
+.detail {
+    position: absolute;
+
+    inset: 0;
+
+    background: rgba(2, 10, 17, 0.68);
+
+    backdrop-filter: blur(13px);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 30px;
+
+    opacity: 0;
+    pointer-events: none;
+
+    transition: opacity 0.35s ease;
+
+    z-index: 200;
+}
+
+.detail.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.detail-box {
+    width: 94%;
+    max-height: 92%;
+
+    overflow-y: auto;
+
+    padding: 33px 43px;
+
+    border-radius: 28px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(7, 30, 45, 0.96),
+            rgba(4, 18, 29, 0.97)
+        );
+
+    border: 1px solid var(--border);
+
+    box-shadow:
+        0 30px 100px rgba(0,0,0,0.55);
+
+    transform: translateY(30px) scale(0.96);
+
+    transition:
+        transform 0.45s cubic-bezier(.2,.8,.2,1);
+}
+
+.detail.active .detail-box {
+    transform: translateY(0) scale(1);
+}
+
+.detail-number {
+    color: var(--cyan);
+    letter-spacing: 3px;
+    font-size: 19px;
+    margin-bottom: 5px;
+}
+
+.detail-title {
+    font-size: 44px;
+    margin-bottom: 8px;
+}
+
+.detail-intro {
+    color: var(--muted);
+    font-size: 22px;
+    line-height: 1.3;
+    max-width: 1150px;
+    margin-bottom: 18px;
+}
+
+/* =========================
+   STATISTIC
+========================= */
+
+.stat-box {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+
+    padding: 25px;
+
+    margin-bottom: 28px;
+
+    border-radius: 20px;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(22,138,173,0.25),
+            rgba(67,217,209,0.08)
+        );
+
+    border: 1px solid rgba(67,217,209,0.3);
+}
+
+.stat-number {
+    font-size: 52px;
+    font-weight: 800;
+
+    color: var(--cyan);
+
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 17px;
+    font-weight: bold;
+}
+
+.stat-small {
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+/* =========================
+   CARDS
+========================= */
+
+.cards {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 11px;
+
+    margin-bottom: 12px;
+}
+
+.cards.cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.cards.cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.cards.cols-5 {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.card {
+    padding: 13px 16px;
+
+    border-radius: 14px;
+
+    background: rgba(255,255,255,0.045);
+
+    border: 1px solid rgba(255,255,255,0.09);
+}
+
+.card h3 {
+    font-size: 19px;
+    margin-bottom: 4px;
+}
+
+.card p {
+    color: var(--muted);
+    font-size: 16px;
+    line-height: 1.24;
+}
+
+.card ul {
+    list-style: none;
+    margin-top: 4px;
+}
+
+.card li {
+    position: relative;
+
+    padding-left: 14px;
+    margin-bottom: 4px;
+
+    color: var(--muted);
+    font-size: 16px;
+    line-height: 1.22;
+}
+
+.card li::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: var(--cyan);
+}
+
+.card li strong {
+    color: var(--white);
+}
+
+/* =========================
+   SUB HEADING
+========================= */
+
+.sub-heading {
+    font-size: 23px;
+    color: var(--cyan);
+
+    margin: 2px 0 8px;
+    padding-top: 8px;
+
+    border-top: 1px solid var(--border);
+}
+
+/* =========================
+   FINAL MESSAGE
+========================= */
+
+.final-message {
+    text-align: center;
+
+    padding: 18px 20px;
+
+    margin-top: 10px;
+
+    border-radius: 20px;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(22,138,173,0.18),
+            rgba(67,217,209,0.08)
+        );
+
+    border: 1px solid rgba(67,217,209,0.2);
+}
+
+.final-message h2 {
+    font-size: 31px;
+    margin-bottom: 5px;
+}
+
+.final-message p {
+    color: var(--muted);
+    font-size: 22px;
+    line-height: 1.3;
+}
+
+/* =========================
+   SOURCE
+========================= */
+
+.source {
+    color: rgba(185,213,223,0.65);
+    font-size: 10px;
+    margin-top: 18px;
+    text-align: right;
+}
+
+/* =========================
+   BUTTON
+========================= */
+
+.back-button {
+    border: none;
+
+    padding: 11px 19px;
+
+    border-radius: 12px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #168aad,
+            #18a9a1
+        );
+
+    color: white;
+
+    font-size: 20px;
+    font-weight: bold;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.back-button:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 8px 25px rgba(67,217,209,0.2);
+}
+
+.nav-button {
+    border: 1px solid rgba(113, 225, 225, 0.35);
+
+    padding: 11px 19px;
+
+    border-radius: 12px;
+
+    background: rgba(255,255,255,0.05);
+
+    color: var(--white);
+
+    font-size: 20px;
+    font-weight: bold;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.2s ease,
+        border-color 0.2s ease,
+        background 0.2s ease;
+}
+
+.nav-button:hover {
+    transform: translateY(-2px);
+
+    border-color: var(--cyan);
+
+    background: rgba(67,217,209,0.12);
+}
+
+.nav-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 14px;
+
+    margin-top: 8px;
+
+    flex-wrap: wrap;
+}
+
+.nav-row-right {
+    display: flex;
+    gap: 12px;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 900px) {
+
+    body {
+        overflow: auto;
+    }
+
+    .stage-wrapper {
+        position: static;
+        display: block;
+
+        overflow: visible;
+    }
+
+    .stage {
+        width: 100%;
+        height: auto;
+        min-height: 100vh;
+
+        transform: none !important;
+    }
+
+    .topbar {
+        position: fixed;
+    }
+
+    .detail {
+        position: fixed;
+    }
+
+    .map-container {
+        position: relative;
+        height: auto;
+        min-height: calc(100vh - 78px);
+
+        padding: 40px 20px;
+    }
+
+    .world {
+        width: 100%;
+        height: auto;
+
+        display: flex;
+        flex-direction: column;
+
+        align-items: center;
+
+        gap: 15px;
+    }
+
+    .connections {
+        display: none;
+    }
+
+    .center,
+    .node {
+        position: relative;
+
+        left: auto !important;
+        right: auto !important;
+        top: auto !important;
+        bottom: auto !important;
+
+        transform: none !important;
+    }
+
+    .center {
+        margin-bottom: 10px;
+    }
+
+    .node {
+        width: min(420px, 100%);
+    }
+
+    .world.zoomed {
+        transform: none;
+    }
+
+    .detail {
+        padding: 15px;
+    }
+
+    .detail-box {
+        padding: 20px;
+
+        max-height: 90vh;
+    }
+
+    .detail-title {
+        font-size: 22px;
+    }
+
+    .cards,
+    .cards.cols-3,
+    .cards.cols-4,
+    .cards.cols-5 {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-box {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .stat-number {
+        font-size: 42px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="stage-wrapper">
+<div class="stage" id="stage">
+
+<!-- =========================
+     TOP BAR
+========================= -->
+
+<header class="topbar">
+
+    <div class="un-icon">◎</div>
+
+    <div>
+        <div class="top-title">
+            UNITED NATIONS
+        </div>
+
+        <div class="top-subtitle">
+            SUSTAINABLE DEVELOPMENT GOAL 2
+        </div>
+    </div>
+
+</header>
+
+
+<!-- =========================
+     MIND MAP
+========================= -->
+
+<main class="map-container">
+
+<div class="world" id="world">
+
+    <!-- CONNECTIONS -->
+
+    <svg class="connections" viewBox="0 0 1050 650">
+
+        <line x1="525" y1="325" x2="165" y2="145"></line>
+
+        <line x1="525" y1="325" x2="885" y2="145"></line>
+
+        <line x1="525" y1="325" x2="115" y2="325"></line>
+
+        <line x1="525" y1="325" x2="285" y2="560"></line>
+
+        <line x1="525" y1="325" x2="765" y2="560"></line>
+
+    </svg>
+
+
+    <!-- CENTER -->
+
+    <div class="center">
+
+        <div class="sdg">
+            SDG 02
+        </div>
+
+        <h1>
+            ZERO HUNGER
+        </h1>
+
+        <p>
+            End hunger, achieve food security,
+            improve nutrition and promote
+            sustainable agriculture.
+        </p>
+
+    </div>
+
+
+    <!-- NODES -->
+
+    <div class="node what"
+         onclick="openSection('intro')">
+
+        <div class="node-number">
+            01
+        </div>
+
+        <div class="node-title">
+            Introduction
+        </div>
+
+        <div class="node-description">
+            World hunger — an overview
+        </div>
+
+    </div>
+
+
+    <div class="node problem"
+         onclick="openSection('problem')">
+
+        <div class="node-number">
+            02
+        </div>
+
+        <div class="node-title">
+            What is the problem?
+        </div>
+
+        <div class="node-description">
+            The causes of world hunger
+        </div>
+
+    </div>
+
+
+    <div class="node causes"
+         onclick="openSection('improve')">
+
+        <div class="node-number">
+            03
+        </div>
+
+        <div class="node-title">
+            How can we improve it?
+        </div>
+
+        <div class="node-description">
+            Solutions and who is helping
+        </div>
+
+    </div>
+
+
+    <div class="node tips"
+         onclick="openSection('tips')">
+
+        <div class="node-number">
+            04
+        </div>
+
+        <div class="node-title">
+            Tips for the future
+        </div>
+
+        <div class="node-description">
+            What everyone can do
+        </div>
+
+    </div>
+
+
+    <div class="node future"
+         onclick="openSection('thankyou')">
+
+        <div class="node-number">
+            05
+        </div>
+
+        <div class="node-title">
+            Conclusion
+        </div>
+
+        <div class="node-description">
+            Thank you for listening!
+        </div>
+
+    </div>
+
+</div>
+
+</main>
+
+
+<!-- =========================
+     DETAIL PANEL
+========================= -->
+
+<div class="detail" id="detail">
+
+    <div class="detail-box">
+
+        <div class="detail-number" id="detailNumber"></div>
+
+        <h2 class="detail-title" id="detailTitle"></h2>
+
+        <p class="detail-intro" id="detailIntro"></p>
+
+        <div id="detailContent"></div>
+
+        <div class="nav-row">
+
+            <button class="back-button"
+                    onclick="closeSection()">
+
+                ← Back to the Mind Map
+
+            </button>
+
+            <div class="nav-row-right">
+
+                <button class="nav-button"
+                        onclick="switchSlide(-1)">
+
+                    ‹ Previous slide
+
+                </button>
+
+                <button class="nav-button"
+                        onclick="switchSlide(1)">
+
+                    Next slide ›
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</div>
+</div>
+
+
+<script>
+
+/* ==========================================
+   CONTENT
+========================================== */
+
+const order = ["intro", "problem", "improve", "tips", "thankyou"];
+
+let currentKey = null;
+
+const movements = {
+
+    intro: {
+        x: "250px",
+        y: "120px"
+    },
+
+    problem: {
+        x: "-250px",
+        y: "120px"
+    },
+
+    improve: {
+        x: "330px",
+        y: "0px"
+    },
+
+    tips: {
+        x: "170px",
+        y: "-180px"
+    },
+
+    thankyou: {
+        x: "-170px",
+        y: "-180px"
+    }
+
+};
+
+const sections = {
+
+    intro: {
+
+        number: "01 — INTRODUCTION",
+
+        title: "World Hunger",
+
+        intro:
+        "World hunger is a serious global problem. Millions of people do not have enough food, even though food is necessary for a healthy life.",
+
+        content: `
+
+            <div class="sub-heading">
+                Three Main Points
+            </div>
+
+            <div class="cards cols-3">
+
+                <div class="card">
+
+                    <h3>1. What is the problem?</h3>
+
+                    <p>
+                        Hunger &amp; poverty, war, climate
+                        change and food waste.
+                    </p>
+
+                </div>
+
+
+                <div class="card">
+
+                    <h3>2. How can we improve it?</h3>
+
+                    <p>
+                        Supporting farmers, education,
+                        clean water and fair distribution.
+                    </p>
+
+                </div>
+
+
+                <div class="card">
+
+                    <h3>3. Tips for the future</h3>
+
+                    <p>
+                        Simple actions that everyone
+                        can take to help.
+                    </p>
+
+                </div>
+
+            </div>
+
+        `
+    },
+
+
+    problem: {
+
+        number: "02 — THE PROBLEM",
+
+        title: "What is the Problem?",
+
+        intro:
+        "Hunger does not have one single cause — poverty, war, climate change and food waste all play a part.",
+
+        content: `
+
+            <div class="cards cols-4">
+
+                <div class="card">
+
+                    <h3>Hunger &amp; Poverty</h3>
+
+                    <ul>
+                        <li>Millions — especially children — do not have enough nutritious food</li>
+                        <li>Poverty makes it hard to afford basic needs</li>
+                        <li>Some people don't have enough to get by</li>
+                    </ul>
+
+                </div>
+
+
+                <div class="card">
+
+                    <h3>War</h3>
+
+                    <ul>
+                        <li>Wars destroy farms, homes, roads and food supplies</li>
+                        <li>Families can lose everything and get caught in the crossfire</li>
+                        <li>Many have to start again after losing everything</li>
+                    </ul>
+
+                </div>
+
+
+                <div class="card">
+
+                    <h3>Climate Change</h3>
+
+                    <ul>
+                        <li>Droughts and floods destroy crops and farms</li>
+                        <li>Extreme weather makes farming harder and food pricier</li>
+                        <li>It can make a bad situation even worse</li>
+                    </ul>
+
+                </div>
+
+
+                <div class="card">
+
+                    <h3>Food Waste</h3>
+
+                    <ul>
+                        <li>Huge amounts of edible food are thrown away</li>
+                        <li>We should not waste good food</li>
+                        <li>Small changes make a real difference</li>
+                    </ul>
+
+                </div>
+
+            </div>
+
+        `
+    },
+
+
+    improve: {
+
+        number: "03 — SOLUTIONS",
+
+        title: "How Can We Improve It?",
+
+        intro:
+        "Supporting farmers, education, clean water and fair distribution build a better future.",
+
+        content: `
+
+            <div class="cards cols-4">
+
+                <div class="card">
+
+                    <h3>Support Farmers</h3>
+
+                    <ul>
+                        <li>Better seeds, water, tools and knowledge help farmers grow more food</li>
+                        <li>Helps communities recover and grow</li>
+                    </ul>
+
+                </div>
+
+
+                <div class="card">
+
+                    <h3>Education</h3>
+
+                    <ul>
+                        <li>Better education leads to better jobs and more income</li>
+                        <li>Education creates more opportunities</li>
+                    </ul>
+
+                </div>
+
+
+                <div class="card">
+
+                    <h3>Clean Water</h3>
+
+                    <ul>
+                        <li>Essential for drinking, farming and animals</li>
+                        <li>Can improve a difficult situation</li>
+                    </ul>
+
+                </div>
+
+
+                <div class="card">
+
+                    <h3>Fair Distribution</h3>
+
+                    <ul>
+                        <li>Some countries have plenty of food, others not enough</li>
+                        <li>Countries should find fair compromises</li>
+                    </ul>
+
+                </div>
+
+            </div>
+
+
+            <div class="sub-heading">
+                Organizations Already Helping
+            </div>
+
+            <div class="cards cols-3">
+
+                <div class="card">
+
+                    <h3>Caritas</h3>
+
+                    <ul>
+                        <li>Provides food, clean water and basic needs after disasters, war or poverty</li>
+                        <li>Supports people in difficult situations</li>
+                    </ul>
+
+                </div>
+
+
+                <div class="card">
+
+                    <h3>World Food Programme</h3>
+
+                    <ul>
+                        <li>Provides emergency food aid in war zones and disasters</li>
+                        <li>Gives people essential help in a crisis</li>
+                    </ul>
+
+                </div>
+
+
+                <div class="card">
+
+                    <h3>Long-Term Solutions</h3>
+
+                    <ul>
+                        <li>Emergency food helps, but education, jobs and water fix the root cause</li>
+                        <li>Addresses the root cause, not just the symptoms</li>
+                    </ul>
+
+                </div>
+
+            </div>
+
+        `
+    },
+
+
+    tips: {
+
+        number: "04 — TIPS FOR THE FUTURE",
+
+        title: "Tips for the Future",
+
+        intro:
+        "World hunger cannot be solved overnight, but everyone can play a part in creating lasting change.",
+
+        content: `
+
+            <div class="cards cols-5">
+
+                <div class="card">
+
+                    <h3>Reduce Food Waste</h3>
+
+                    <ul>
+                        <li>Buy only what you need and eat leftovers</li>
+                        <li>Small actions make a big difference</li>
+                    </ul>
+
+                </div>
+
+
+                <div class="card">
+
+                    <h3>Use Resources Carefully</h3>
+
+                    <ul>
+                        <li>Save water, protect farmland, farm smarter</li>
+                        <li>Find creative, smart solutions</li>
+                    </ul>
+
+                </div>
+
+
+                <div class="card">
+
+                    <h3>Support Developing Countries</h3>
+
+                    <ul>
+                        <li>Teach new farming methods instead of only giving food</li>
+                        <li>Help people become self-sufficient</li>
+                    </ul>
+
+                </div>
+
+
+                <div class="card">
+
+                    <h3>Fight Climate Change</h3>
+
+                    <ul>
+                        <li>Reduce pollution and use renewable energy</li>
+                        <li>Everyone should do their part</li>
+                    </ul>
+
+                </div>
+
+
+                <div class="card">
+
+                    <h3>Work Together</h3>
+
+                    <ul>
+                        <li>Governments, companies and individuals all have a role</li>
+                        <li>We need to work as one</li>
+                    </ul>
+
+                </div>
+
+            </div>
+
+        `
+    },
+
+
+    thankyou: {
+
+        number: "05 — CONCLUSION",
+
+        title: "Thank You for Listening!",
+
+        intro:
+        "World hunger is caused by poverty, war, climate change and food waste — but solutions already exist.",
+
+        content: `
+
+            <div class="cards">
+
+                <div class="card">
+
+                    <h3>Caused By</h3>
+
+                    <ul>
+                        <li>Poverty &amp; war</li>
+                        <li>Climate change</li>
+                        <li>Food waste</li>
+                    </ul>
+
+                </div>
+
+
+                <div class="card">
+
+                    <h3>Solved By</h3>
+
+                    <ul>
+                        <li>Supporting farmers &amp; education</li>
+                        <li>Reducing food waste</li>
+                        <li>Caritas, WFP and more</li>
+                    </ul>
+
+                </div>
+
+            </div>
+
+
+            <div class="final-message">
+
+                <h2>
+                    Thank you for listening!
+                </h2>
+
+                <p>
+                    Everyone deserves enough food for a healthy life.
+                </p>
+
+            </div>
+
+        `
+    }
+
+};
+
+
+/* ==========================================
+   OPEN SECTION
+========================================== */
+
+function openSection(key) {
+
+    const section = sections[key];
+
+    const world = document.getElementById("world");
+
+    const detail = document.getElementById("detail");
+
+    currentKey = key;
+
+    document.getElementById("detailNumber").textContent =
+        section.number;
+
+    document.getElementById("detailTitle").textContent =
+        section.title;
+
+    document.getElementById("detailIntro").textContent =
+        section.intro;
+
+    document.getElementById("detailContent").innerHTML =
+        section.content;
+
+    document.querySelector(".detail-box").scrollTop = 0;
+
+
+    /* Camera movement */
+
+    world.style.setProperty(
+        "--move-x",
+        movements[key].x
+    );
+
+    world.style.setProperty(
+        "--move-y",
+        movements[key].y
+    );
+
+
+    world.classList.add("zoomed");
+
+    setTimeout(() => {
+
+        detail.classList.add("active");
+
+    }, 180);
+
+}
+
+
+/* ==========================================
+   SWITCH SLIDE (without returning to the map)
+========================================== */
+
+function switchSlide(step) {
+
+    const currentIndex = order.indexOf(currentKey);
+
+    const nextIndex =
+        (currentIndex + step + order.length) % order.length;
+
+    const key = order[nextIndex];
+
+    const section = sections[key];
+
+    const world = document.getElementById("world");
+
+    currentKey = key;
+
+    document.getElementById("detailNumber").textContent =
+        section.number;
+
+    document.getElementById("detailTitle").textContent =
+        section.title;
+
+    document.getElementById("detailIntro").textContent =
+        section.intro;
+
+    document.getElementById("detailContent").innerHTML =
+        section.content;
+
+    document.querySelector(".detail-box").scrollTop = 0;
+
+
+    world.style.setProperty(
+        "--move-x",
+        movements[key].x
+    );
+
+    world.style.setProperty(
+        "--move-y",
+        movements[key].y
+    );
+
+}
+
+
+/* ==========================================
+   CLOSE SECTION
+========================================== */
+
+function closeSection() {
+
+    const detail =
+        document.getElementById("detail");
+
+    const world =
+        document.getElementById("world");
+
+
+    detail.classList.remove("active");
+
+    setTimeout(() => {
+
+        world.classList.remove("zoomed");
+
+    }, 100);
+
+}
+
+
+/* ==========================================
+   ESCAPE KEY
+========================================== */
+
+document.addEventListener(
+    "keydown",
+    function(event) {
+
+        if (event.key === "Escape") {
+
+            closeSection();
+
+        }
+
+    }
+);
+
+
+/* ==========================================
+   STAGE SCALING
+   Scales the fixed 1280x750 canvas uniformly
+   to fit the real screen, so the slides look
+   identical on every laptop/projector/PC —
+   just bigger or smaller. Disabled on phones,
+   where the stage falls back to normal flow.
+========================================== */
+
+function fitStage() {
+
+    const stage = document.getElementById("stage");
+
+    if (window.innerWidth <= 900) {
+
+        stage.style.transform = "";
+
+        return;
+
+    }
+
+    const scale = Math.min(
+        window.innerWidth / 1280,
+        window.innerHeight / 750
+    );
+
+    stage.style.transform = "scale(" + scale + ")";
+
+}
+
+window.addEventListener("resize", fitStage);
+
+fitStage();
+
+</script>
+
+</body>
+</html>
